@@ -1,0 +1,120 @@
+Here is a version of the unix "ed" editor.
+For its history, please see the manual page.
+
+This source uses a very slightly hacked version of Henry Spencer's
+Regexp package. The only difference from Henry's original is that regsub
+now returns a value, so it should be compatible with other uses of this
+package.
+
+I'm sure that Henry's package is in an archive server somewhere, but I
+just mailed him (for his address, look in /usr/spool/news/.... :-)
+and was sent them by return. Don't you all do the same, though!
+
+Here are the diffs from Henry's original:
+
+*** regexp.h.orig	Fri Sep 29 11:23:29 1989
+--- regexp.h	Wed Nov 22 12:31:41 1989
+***************
+*** 15,21 ****
+  	char program[1];	/* Unwarranted chumminess with compiler. */
+  } regexp;
+ 
+  extern regexp *regcomp();
+  extern int regexec();
+! extern void regsub();
+  extern void regerror();
+--- 15,29 ----
+  	char program[1];	/* Unwarranted chumminess with compiler. */
+  } regexp;
+ 
++ #ifdef __STDC__
++ extern regexp *regcomp( char * );
++ extern int regexec( regexp*, char* );
++ extern char *regsub( regexp*, char*, char* );
++ extern void regerror( char* );
++ #else
+  extern regexp *regcomp();
+  extern int regexec();
+! extern char *regsub();
+  extern void regerror();
++ #endif
+*** regsub.c.orig	Fri Sep 29 11:23:33 1989
+--- regsub.c	Wed Nov 22 12:18:52 1989
+***************
+*** 18,23 ****
+--- 18,27 ----
+   *
+   *	3. Altered versions must be plainly marked as such, and must not
+   *		be misrepresented as being the original software.
++  *
++  * This version modified by Ian Phillipps to return pointer to terminating
++  * NUL on substitution string. [ Temp mail address ex-igp@camcon.co.uk ]
++  *
+   */
+  #include <stdio.h>
+  #include <regexp.h>
+***************
+*** 32,38 ****
+  /*
+   - regsub - perform substitutions after a regexp match
+   */
+! void
+  regsub(prog, source, dest)
+  regexp *prog;
+  char *source;
+--- 36,43 ----
+  /*
+   - regsub - perform substitutions after a regexp match
+   */
+! char *
+  regsub(prog, source, dest)
+  regexp *prog;
+  char *source;
+***************
+*** 47,57 ****
+ 
+  	if (prog == NULL || source == NULL || dest == NULL) {
+  		regerror("NULL parm to regsub");
+! 		return;
+  	}
+  	if (UCHARAT(prog->program) != MAGIC) {
+  		regerror("damaged regexp fed to regsub");
+! 		return;
+  	}
+ 
+  	src = source;
+--- 52,62 ----
+ 
+  	if (prog == NULL || source == NULL || dest == NULL) {
+  		regerror("NULL parm to regsub");
+! 		return NULL;
+  	}
+  	if (UCHARAT(prog->program) != MAGIC) {
+  		regerror("damaged regexp fed to regsub");
+! 		return NULL;
+  	}
+ 
+  	src = source;
+***************
+*** 74,82 ****
+  			dst += len;
+  			if (len != 0 && *(dst-1) == '\0') {	/* strncpy hit NUL. */
+  				regerror("damaged match string");
+! 				return;
+  			}
+  		}
+  	}
+! 	*dst++ = '\0';
+  }
+--- 79,89 ----
+  			dst += len;
+  			if (len != 0 && *(dst-1) == '\0') {	/* strncpy hit NUL. */
+  				regerror("damaged match string");
+! 				return NULL;
+  			}
+  		}
+  	}
+! 	*dst = '\0';
+! 	return dst;
+  }
+*************** end of diffs *****************

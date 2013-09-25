@@ -1,0 +1,138 @@
+ed - line-oriented text editor, similar to UN*X V7 ed
+
+syntax:
+	ed [existing-file]
+
+	existing-file  Only an existing file can be opened.  Otherwise
+		a nameless edit buffer is opened; a name can be used with
+		the `f' or `w' commands.
+
+As a line editor, ed operates in one of two modes: COMMAND mode, in which
+a colon is displayed at the screen's bottom to prompt for a command; and
+INPUT mode, in which all keyboard input is added to the file (edit buffer).
+From COMMAND mode, INPUT mode is entered by either the `i' or `a' commands.
+From INPUT mode, the COMMAND mode is restored by entering a line consisting
+of a single period by itself.  If such a line is desired in the file, it
+can be created by entering (for instance) two periods, then using the `s'
+command to change these to only one period.
+
+A command consists of an optional line-range specification, a single char-
+acter indicating the command, and for some commands an optional third
+argument.  The line-range specification is either a single line number or
+a first-line number and a last-line number separated by a comma.  The
+character `^' means the first line of the file; `$' means the last line
+of the file.
+
+Commands:
+    <newline>
+	If a line is specified, make that the new current line.
+	Otherwise advance the current-line-pointer by one line.
+    =	Print the line number of the current line.
+    .	(by itself)  Print the current line.
+    -	(by itself)  Move the current-line-pointer back one, and print
+	the new current line.
+    +	(by itself)  Move the current-line-pointer forward one, and
+	print the new current line.
+    !	Execute a shell command and return.
+    a	Go into INPUT mode with a new line following the current line.
+	(INPUT mode is terminated by an input line containing only a
+	period in the first column.)
+    i	Go into INPUT mode with a new line preceding the current line.
+	(INPUT mode is terminated by an input line containing only a
+	period in the first column.)
+    c	Delete the specified lines (or the current line) and then
+	add new lines in their place.  This is equivalent to a `d'
+	command followed by an `i' command.
+    d	Delete the specified range of lines (or the current line).
+	Leave the current-line-pointer at the following line.
+    e	Clear the edit buffer and begin editing a new file.  This
+	command fails if the buffer contains changes (or new lines)
+	which have not been written out.  To discard these changes
+	and edit a new file, use `E' instead of `e'.
+    E	Clear the edit buffer and begin editing a new file, regardless
+	of any changes to the current edit buffer.
+    f	Print the filename, or set it to a new name if specified.
+    g	Perform the following command on all matching lines in range
+    j	Join the addressed lines together (or the current line to the
+	previous line).
+    k	Mark the addressed line with the specified letter.  Example:
+	`17ka' puts mark "a" on line 17.
+    l	List the addressed lines, showing all non-printing characters
+	and indicating the end-of-line.
+    m	Move the specified range of lines to follow the line number
+	given.  Example:  `5,7m3' moves lines 5 through 7 "up", to
+	follow line 3.
+  p,P	Print the specified lines.
+    q	Quit the editor.  This fails if the edit buffer contains any
+	changes.  If so, use `Q' instead.
+    Q	Quit the editor absolutely.  Any changes are discarded.
+    r	Read in a file, adding it after the current line.
+    s	Substitute text on the current line.  Example:  `s/alpha/beta/'
+	finds the string "alpha" and replaces it with "beta".
+    t	Transfer (copy) the specified range of lines to follow the line
+	number given.  Example:  `5,7t7' puts a copy of lines 5 through
+	7 after line 7.
+    v	Perform the following command on all non-matching lines in range
+  w,W	Write the edit buffer out.  If a filename is given, it is used
+	and becomes the current filename.  If a range of lines is
+	specified, only those lines are written.
+    x	Write the entire buffer out to its file, and terminate.
+    z	Print 21 lines.  `-', `.', or `+' may be given, and mean
+	"start 21 lines previous, end at current line",
+	"start 11 lines previous, end 10 lines hence", or
+	"start at current line, end 21 lines from here", respectively.
+
+The syntax of g and v is  <addrs> g /re/ <command>
+
+BUGS and COMMENTS
+
+There's no "u" command. Reading files is still pretty slow. IGP.
+
+[Here's an example of how to split a line:  .s/BUGS/BU\nGS/
+The backslash n (\n) ends the current line after the U and starts another
+line beginning with G.  -Ed L]
+
+The code started out as many small files.  It is now one file, but the
+result isn't as clean as it could be.  I've cleaned it up some, but in
+converting it to TurboC compliancy I've probably lost generic C compliancy.
+Headers describing its distribution history are appended to the code.
+
+[The i variable in function doprnt() has been eliminated and replaced by
+the global variable CurLn.  MSDOS signal code has been added to intercept
+CTRL C and CTRL [BREAK] so that the program does not abort your work when
+you press either of these key sequences.  -Ed L]
+
+AUTHORS
+
+Brian Beattie seems to be the original author.  Kees Bot is associated
+with it.  Andy Tanenbaum ported it to MINIX, and posted it to Usenet.
+Bob Montante ported it to MSDOS and did some minor dressing-up.
+Somebody called Ed L added some comments above.
+
+This version is derived from the one posted in comp.binaries.ibm.pc in ?early
+1988.
+Ian Phillipps replaced the regexp stuff with Henry Spencer's version, and
+did some other speed-ups and tinkerings. See below.
+Lewis Carroll wrote Alice's Adventures in Wonderland;
+James Joyce wrote Finnegans Wake; they are clearly the spiritual wellsprings.
+[I think Dennis Ritchie deserves a mention here, too. IGP]
+
+[The ed.c source contains an untoggled switch for displaying line
+numbers and another for stripping high bits off characters.  If you
+type "se" at the ":" prompt, you will get a decimal version number.
+-Ed L]
+
+Changes by IGP since the last comp.binaries.ibm.pc posting:
+
+Regular expression code replaced with Henry Spencer's (lightly hacked).
+Unneccessary text copying eliminated, and the remaining quadratic-time
+algorithms to track line numbers removed. The program now remembers a pointer
+to the current line.
+All this has speeded up "g" by a factor of 20-50, so now I've documented it :-).
+Logic fixed in egets to eliminate redundant tests.
+A bug in <multiline> s/.../\n/ has been fixed.
+All out-of-memory errors should now be reported (many were ignored before).
+A Turbo-C dependency ("cdecl") has been #ifdefed.
+All routines now have prototypes.
+Ian Phillipps (probably contactable via ex-igp@camcon.co.uk,
+but don't bank on it)
